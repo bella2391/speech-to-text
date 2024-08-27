@@ -1,0 +1,79 @@
+plugins {
+    id 'java'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+}
+
+version = "${version}"
+group = "${group}"
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // Guice dependencies
+    implementation 'com.google.inject:guice:5.1.0'
+    // Dependencies of Guice
+    implementation 'javax.inject:javax.inject:1'
+    implementation 'aopalliance:aopalliance:1.0'
+    implementation 'biz.aQute:bnd:0.0.384'
+    implementation 'com.google.errorprone:error_prone_annotations:2.18.0'
+    implementation 'com.google.guava:guava:31.0.1-jre'
+    implementation 'com.google.truth.extensions:truth-java8-extension:1.1.3'
+    implementation 'com.google.truth:truth:1.1.3'
+    implementation 'jakarta.inject:jakarta.inject-api:2.0.1'
+    implementation 'jakarta.inject:jakarta.inject-tck:2.0.1'
+    implementation 'junit:junit:4.13.2'
+    // Other dependencies
+    implementation 'org.yaml:snakeyaml:2.0'
+    implementation 'mysql:mysql-connector-java:8.0.30'
+    implementation 'org.json:json:20180813'
+    // https://mvnrepository.com/artifact/com.google.cloud/google-cloud-speech
+    implementation 'com.google.cloud:google-cloud-speech:4.43.0'
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation 'ch.qos.logback:logback-classic:1.4.5'
+}
+
+shadowJar {
+    archiveClassifier.set('all')
+    configurations = [project.configurations.runtimeClasspath, project.configurations.compileClasspath]
+    dependencies {
+        // 必要な依存関係のみを含める
+        include(dependency('com.google.inject:guice'))
+        include(dependency('javax.inject:javax.inject'))
+        include(dependency('aopalliance:aopalliance'))
+        include(dependency('biz.aQute:bnd'))
+        include(dependency('com.google.errorprone:error_prone_annotations'))
+        include(dependency('com.google.truth.extensions:truth-java8-extension'))
+        include(dependency('com.google.truth:truth'))
+        include(dependency('jakarta.inject:jakarta.inject-api'))
+        include(dependency('jakarta.inject:jakarta.inject-tck'))
+        include(dependency('junit:junit'))
+        include(dependency('mysql:mysql-connector-java'))
+        include(dependency('org.json:json'))
+        include(dependency('org.yaml:snakeyaml'))
+        include(dependency('com.google.cloud:google-cloud-speech'))
+        include(dependency('org.slf4j:slf4j-api'))
+    }
+}
+
+tasks.named('jar', Jar).configure {
+    manifest {
+        attributes([
+                'Specification-Title'     : "${title}",
+                'Specification-Vendor'    : "${author}",
+                'Specification-Version'   : '1', // We are version 1 of ourselves
+                'Implementation-Title'    : "${title}",
+                'Implementation-Version'  : project.jar.archiveVersion,
+                'Implementation-Vendor'   : "${author}",
+                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+
+    finalizedBy 'shadowJar'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
