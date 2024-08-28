@@ -1,0 +1,9 @@
+Manifest-Version: 1.0
+Specification-Title: fmc_speech_recognition
+Specification-Vendor: Bella
+Specification-Version: 1
+Implementation-Title: fmc_speech_recognition
+Implementation-Version: 1.0.0-SNAPSHOT
+Implementation-Vendor: Bella
+Implementation-Timestamp: 2024-08-28T14:34:38+0900
+
