@@ -1,4 +1,4 @@
-# Speech-To-Text
+# speech-to-text
 
 ## Note
 
