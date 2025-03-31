@@ -1,9 +1,7 @@
 # speech-to-text
 
-## Note
-
-It is possible to output conversations in mp3, wav, etc. in text format.
+## Feature
+* Convert conversations in mp3, wav, etc. to plain text.
 
 ## Lisence
-
-This project is licensed under the MIT License, see the LICENSE.txt file for details.
+[MIT](LICENSE.txt)
