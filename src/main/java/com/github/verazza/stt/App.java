@@ -1,7 +1,9 @@
-package net.keyp.forev;
+package com.github.verazza.stt;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,36 +19,55 @@ import com.google.cloud.speech.v1.SpeechRecognitionResult;
 import com.google.cloud.speech.v1.SpeechSettings;
 import com.google.protobuf.ByteString;
 
-public class SpeechToText {
+public class App {
+  private static final String AUTH_JSON_FILENAME = "auth.json";
+  private static final String DEFAULT_MP3_FILENAME = "audio.mp3"; // デフォルトのMP3ファイル名
 
   public static void main(String[] args) {
+    Logger logger = LoggerFactory.getLogger("speech-to-text");
 
-    Logger logger = LoggerFactory.getLogger("speechtotext");
+    File authFile = new File(AUTH_JSON_FILENAME);
+    File mp3File = new File(DEFAULT_MP3_FILENAME);
+
     try {
-      String jsonNamePath = "C:\\Google\\google-service-account-auth.json";
-      String fileNamePath = "C:\\Test\\audio\\shining.mp3"; // 音声ファイルのパス
+      InputStream credentialsStream;
+      if (authFile.exists()) {
+        logger.info("auth.json found in the same directory. Loading...");
+        credentialsStream = new FileInputStream(authFile);
+      } else {
+        System.out.println("auth.json をjarファイルと同じ階層に配置してください。");
+        return;
+      }
 
-      // サービスアカウントの JSON ファイルから認証情報を読み込む
-      FileInputStream credentialsStream = new FileInputStream(jsonNamePath);
       GoogleCredentials credentials = ServiceAccountCredentials.fromStream(credentialsStream);
 
-      // SpeechSettings に認証情報を設定
       SpeechSettings settings = SpeechSettings.newBuilder().setCredentialsProvider(() -> credentials).build();
 
-      // SpeechClient を作成
       try (SpeechClient speechClient = SpeechClient.create(settings)) {
-        ByteString audioBytes = ByteString.readFrom(new FileInputStream(fileNamePath));
+        ByteString audioBytes;
+        String fileNamePath;
 
-        // ファイルの拡張子を取得
+        if (mp3File.exists()) {
+          logger.info(DEFAULT_MP3_FILENAME + " found in the same directory. Loading...");
+          fileNamePath = DEFAULT_MP3_FILENAME;
+          audioBytes = ByteString.readFrom(new FileInputStream(fileNamePath));
+        } else {
+          System.out.println(DEFAULT_MP3_FILENAME + " をjarファイルと同じ階層に配置してください。");
+          return;
+        }
+
         String extension = getFileExtension(fileNamePath);
-
         RecognitionConfig.AudioEncoding encoding;
 
-        // 拡張子に基づいてエンコーディングを設定
         switch (extension.toLowerCase()) {
-          case "mp3" -> encoding = RecognitionConfig.AudioEncoding.MP3;
-          case "wav" -> encoding = RecognitionConfig.AudioEncoding.LINEAR16;
-          default -> throw new IllegalArgumentException("Unsupported audio format: " + extension);
+          case "mp3":
+            encoding = RecognitionConfig.AudioEncoding.MP3;
+            break;
+          case "wav":
+            encoding = RecognitionConfig.AudioEncoding.LINEAR16;
+            break;
+          default:
+            throw new IllegalArgumentException("Unsupported audio format: " + extension);
         }
 
         RecognitionConfig config = RecognitionConfig.newBuilder()

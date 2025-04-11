@@ -1,84 +1,70 @@
 plugins {
-    id 'java'
-    id 'com.github.johnrengelman.shadow' version '7.0.0'
+  id 'java'
+  id 'com.github.johnrengelman.shadow' version '7.0.0'
+  id 'application'
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_22
-    targetCompatibility = JavaVersion.VERSION_22
+  sourceCompatibility = JavaVersion.VERSION_17
+  targetCompatibility = JavaVersion.VERSION_17
 }
 
-version = "${version}"
-group = "${group}"
+version = "1.0.0"
+group = "com.github.verazza.stt"
+
+configurations {
+  shadowImpl
+  compileOnly.extendsFrom shadowImpl
+}
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    // Guice dependencies
-    implementation 'com.google.inject:guice:5.1.0'
-    // Dependencies of Guice
-    implementation 'javax.inject:javax.inject:1'
-    implementation 'aopalliance:aopalliance:1.0'
-    implementation 'biz.aQute:bnd:0.0.384'
-    implementation 'com.google.errorprone:error_prone_annotations:2.18.0'
-    implementation 'com.google.guava:guava:31.0.1-jre'
-    implementation 'com.google.truth.extensions:truth-java8-extension:1.1.3'
-    implementation 'com.google.truth:truth:1.1.3'
-    implementation 'jakarta.inject:jakarta.inject-api:2.0.1'
-    implementation 'jakarta.inject:jakarta.inject-tck:2.0.1'
-    implementation 'junit:junit:4.13.2'
-    // Other dependencies
-    implementation 'org.yaml:snakeyaml:2.0'
-    implementation 'mysql:mysql-connector-java:8.0.30'
-    implementation 'org.json:json:20180813'
-    // https://mvnrepository.com/artifact/com.google.cloud/google-cloud-speech
-    implementation 'com.google.cloud:google-cloud-speech:4.43.0'
-    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
-    implementation 'org.slf4j:slf4j-api:2.0.16'
-    implementation 'ch.qos.logback:logback-classic:1.4.5'
+  // Guice dependencies
+  shadowImpl 'com.google.inject:guice:5.1.0'
+
+  // Dependencies of Guice
+  shadowImpl 'javax.inject:javax.inject:1'
+  shadowImpl 'aopalliance:aopalliance:1.0'
+  shadowImpl 'biz.aQute:bnd:0.0.384'
+  shadowImpl 'com.google.errorprone:error_prone_annotations:2.18.0'
+  shadowImpl 'com.google.guava:guava:31.0.1-jre'
+  shadowImpl 'com.google.truth.extensions:truth-java8-extension:1.1.3'
+  shadowImpl 'com.google.truth:truth:1.1.3'
+  shadowImpl 'jakarta.inject:jakarta.inject-api:2.0.1'
+  shadowImpl 'jakarta.inject:jakarta.inject-tck:2.0.1'
+  shadowImpl 'junit:junit:4.13.2'
+
+  // Other dependencies
+  shadowImpl 'org.yaml:snakeyaml:2.0'
+  shadowImpl 'mysql:mysql-connector-java:8.0.30'
+  shadowImpl 'org.json:json:20180813'
+
+  // https://mvnrepository.com/artifact/com.google.cloud/google-cloud-speech
+  shadowImpl 'com.google.cloud:google-cloud-speech:4.43.0'
+
+  // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+  shadowImpl 'org.slf4j:slf4j-api:2.0.16'
+  shadowImpl 'ch.qos.logback:logback-classic:1.4.5'
+}
+
+application {
+  mainClass.set("com.github.verazza.stt.App")
 }
 
 shadowJar {
-    archiveClassifier.set('all')
-    configurations = [project.configurations.runtimeClasspath, project.configurations.compileClasspath]
-    dependencies {
-        // 必要な依存関係のみを含める
-        include(dependency('com.google.inject:guice'))
-        include(dependency('javax.inject:javax.inject'))
-        include(dependency('aopalliance:aopalliance'))
-        include(dependency('biz.aQute:bnd'))
-        include(dependency('com.google.errorprone:error_prone_annotations'))
-        include(dependency('com.google.truth.extensions:truth-java8-extension'))
-        include(dependency('com.google.truth:truth'))
-        include(dependency('jakarta.inject:jakarta.inject-api'))
-        include(dependency('jakarta.inject:jakarta.inject-tck'))
-        include(dependency('junit:junit'))
-        include(dependency('mysql:mysql-connector-java'))
-        include(dependency('org.json:json'))
-        include(dependency('org.yaml:snakeyaml'))
-        include(dependency('com.google.cloud:google-cloud-speech'))
-        include(dependency('org.slf4j:slf4j-api'))
-    }
+  configurations = [project.configurations.shadowImpl]
+  archiveBaseName.set('Speech-to-text')
+  archiveClassifier.set('')
+  archiveVersion.set(project.version)
+  exclude('META-INF/*.SF', 'META-INF/*.DSA', 'META-INF/*.RSA')
+  manifest {
+    attributes 'Main-Class': application.mainClass.get()
+  }
 }
 
-tasks.named('jar', Jar).configure {
-    manifest {
-        attributes([
-                'Specification-Title'     : "${title}",
-                'Specification-Vendor'    : "${author}",
-                'Specification-Version'   : '1', // We are version 1 of ourselves
-                'Implementation-Title'    : "${title}",
-                'Implementation-Version'  : project.jar.archiveVersion,
-                'Implementation-Vendor'   : "${author}",
-                'Implementation-Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-        ])
-    }
-
-    finalizedBy 'shadowJar'
-}
-
-tasks.withType(JavaCompile).configureEach {
-    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+tasks.build {
+  dependsOn tasks.shadowJar
 }
